@@ -6,7 +6,7 @@ with open("README.md", "r") as readme_file:
 requirements = ["tqdm>=4.32.1"]
 
 setup(
-    name="notebookc",
+    name="MightyMosaic",
     python_requires='3.6.0',
     version="0.0.1",
     author="Aurélien COLIN",
