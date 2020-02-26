@@ -48,15 +48,21 @@ class MightyMosaic(np.ndarray):
             f'When a list, overlap_factor should have a length of 2, ' \
                 f'but is {overlap_factor} with a length of {len(overlap_factor)}'
 
+        assert tile_shape[0] / overlap_factor[0] == tile_shape[0] // overlap_factor[0], \
+            f"The first dimension of the tile_shape {tile_shape} cannot be divided " \
+                f"by the overlap_factor {overlap_factor[0]}"
+        assert tile_shape[1] / overlap_factor[1] == tile_shape[1] // overlap_factor[1], \
+            f"The second dimension of the tile_shape {tile_shape} cannot be divided " \
+                f"by the overlap_factor {overlap_factor[1]}"
+
         nb_channels = shape[-1] if len(shape) == 3 else None
 
         mosaic_margins = -shape[0] % tile_shape[0], -shape[1] % tile_shape[1]
         tile_margins = (int((0.5 - 0.5 / overlap_factor[0]) * tile_shape[0]),
                         int((0.5 - 0.5 / overlap_factor[1]) * tile_shape[1]))
         tile_center_dims = tile_shape[0] - 2 * tile_margins[0], tile_shape[1] - 2 * tile_margins[1]
-
-        mosaic_shape = [(shape[0] + mosaic_margins[0]) // tile_center_dims[0],
-                        (shape[1] + mosaic_margins[1]) // tile_center_dims[1],
+        mosaic_shape = [math.ceil((shape[0] + mosaic_margins[0]) / tile_center_dims[0]),
+                        math.ceil((shape[1] + mosaic_margins[1]) / tile_center_dims[1]),
                         tile_shape[0],
                         tile_shape[1]]
         if nb_channels:
