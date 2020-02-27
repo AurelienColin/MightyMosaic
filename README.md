@@ -20,7 +20,7 @@ The MightyMosaic allow the overlapping of tiles, which is necessary to avoid dis
 
 ## Requirements
 
-As we use f-string (in the asserts) it is necessary to have, at least, **python3.6**.
+As we use f-string (in the asserts), it is necessary to have, at least, **python3.6**.
 
 - numpy
 - tqdm
@@ -36,7 +36,7 @@ For running this jupyter notebook (which should have been converted to markdown 
 
 Let's begin by importing the library that we need and define the filename for both the images and the model that we will use.
 
-Btw, credits for itout (#pixiv69581) and Akae Neo (#17014316) for drawing the pictures that we used as examples.
+Btw, credits for itout (pixiv69581) and Akae Neo (pixiv17014316) for drawing the pictures that we used as examples.
 
 
 ```python
@@ -48,7 +48,7 @@ import PIL.Image
 
 from keras.models import load_model
 
-import MightyMosaic
+from MightyMosaic import MightyMosaic
 ```
 
 
@@ -93,7 +93,7 @@ plt.show()
 ```
 
 
-![png](README_files/README_9_0.png)
+![png](https://raw.githubusercontent.com/Rignak/MightyMosaic/master/README_files/README_9_0.png)
 
 
 Nice, right? The model return a value of 0 on closed eyes, and 1 on opened eyes.
@@ -129,19 +129,21 @@ plt.show()
     
 
 
-![png](README_files/README_11_1.png)
+![png](https://raw.githubusercontent.com/Rignak/MightyMosaic/master/README_files/README_11_1.png)
 
 
 If the two images are different, that's mean that I commit something, broke another, and didn't check the results. Hopefully, that didn't happen.
 
 Let's apply the *predict* method and check the result.
-Please notice that we use a lambda, because the model outputs a (?, 256, 256, 1)-shaped array.
+
+Please ensure that, if the *predict* take an input of shape *(?, x, y, z)*, it returns an array of shape *(?, x', y', z')* or *(?, x', y')* (so, no additional dimensions). There is another condition on *x'*, *y'* that we will see later.
 
 We can have a *progress\_bar* to see the progress of the prediction. 
 
 
 ```python
-fused_prediction_without_overlap = mosaic_without_overlap.apply(lambda x: model.predict(x)[:,:,:,0], progress_bar=True)
+fused_prediction_without_overlap = mosaic_without_overlap.apply(model.predict, progress_bar=True)
+print(f'The prediction shape is : {fused_prediction_without_overlap.shape}')
 fused_prediction_without_overlap = fused_prediction_without_overlap.get_fusion()
 
 plt.figure(figsize=(16, 16))
@@ -151,7 +153,7 @@ plt.imshow(full_im, interpolation='bilinear', vmin=0, vmax=1)
 
 plt.subplot(122)
 plt.title('Prediction on the mosaic')
-plt.imshow(fused_prediction_without_overlap, interpolation='bilinear', vmin=0, vmax=1)
+plt.imshow(fused_prediction_without_overlap[:,:,0], interpolation='bilinear', vmin=0, vmax=1)
 plt.show()
 ```
 
@@ -160,10 +162,11 @@ plt.show()
 
 
     
+    The prediction shape is : (4, 4, 256, 256, 1)
     
 
 
-![png](README_files/README_13_2.png)
+![png](https://raw.githubusercontent.com/Rignak/MightyMosaic/master/README_files/README_13_2.png)
 
 
 Meh. Not convinced about the results? Maybe it's because of the boundary of each tile, clearly visible in the prediction. And since the left eye is between four tiles, the prediction can't be accurate.
@@ -175,7 +178,9 @@ In fact, what we want is an overlapping mosaic (meaning that the tiles overlap).
 Let's create a mosaic with an *overlapping\_factor* of 2, meaning that the stride, between each tile is only *tile\_shape*/2.
 Of course, an overlapping_factor of one means no overlapping, and you can increase the factor to any positive integer. However, please note that the number of tile increase with *tile\_shape*^2, so might want to refrain to use a high *overlapping\_factor* (it would be quite useless anyway).
 
+
 Also, do not use a *overlap\_factor* that can't divide the *tile\_shape* (that also means that you want to avoid odd shapes).
+We previously talk about a condition on *x'* and *y'*, it is the same as on *x*, *y* : they must be multiple of the correspondant *overlap\_factor*.
 
 
 ```python
@@ -192,7 +197,7 @@ Our prediction support batchs, so we will use it to speed up the processing a li
 
 
 ```python
-prediction = mosaic.apply(lambda x: model.predict(x)[:,:,:,0], progress_bar=True, batch_size=8)
+prediction = mosaic.apply(model.predict, progress_bar=True, batch_size=8)
 prediction = prediction.get_fusion()
 
 plt.figure(figsize=(16, 16))
@@ -202,7 +207,7 @@ plt.imshow(full_im, interpolation='bilinear', vmin=0, vmax=1)
 
 plt.subplot(122)
 plt.title('Prediction on the mosaic')
-plt.imshow(prediction, interpolation='bilinear', vmin=0, vmax=1)
+plt.imshow(prediction[:,:,0], interpolation='bilinear', vmin=0, vmax=1)
 plt.show()
 ```
 
@@ -214,7 +219,7 @@ plt.show()
     
 
 
-![png](README_files/README_17_2.png)
+![png](https://raw.githubusercontent.com/Rignak/MightyMosaic/master/README_files/README_17_2.png)
 
 
 The prediction is quite better, without visible borders between tiles.
@@ -235,7 +240,7 @@ print(f'The mosaic shape is {mosaic_with_reflection.shape}')
     The mosaic shape is (16, 16, 256, 256, 3)
     
 
-OK, we now are ready to plot, side by side, the prediction for:
+OK, now, we are ready to plot, side by side, the prediction for:
 - the mosaic without overlap (I);
 - the mosaic with an *overlapping\_factor* of 2 (II);
 - the mosaic with an *overlapping\_factor* of 4 and a *fill\_mode* at "*nearest*" (III).
@@ -244,7 +249,7 @@ We also plot abs(II-I) and abs(III-II) to highlight the effects of the parameter
 
 
 ```python
-prediction_with_reflection = mosaic_with_reflection.apply(lambda x: model.predict(x)[:,:,:,0], 
+prediction_with_reflection = mosaic_with_reflection.apply(model.predict, 
                                                           progress_bar=True, batch_size=8)
 prediction_with_reflection = prediction_with_reflection.get_fusion()
 
@@ -254,19 +259,19 @@ plt.title('Input')
 plt.imshow(full_im, interpolation='bilinear', vmin=0, vmax=1)
 plt.subplot(231)
 plt.title(f'(I) shape={fused_prediction_without_overlap.shape}')
-plt.imshow(fused_prediction_without_overlap, interpolation='bilinear', vmin=0, vmax=1)
+plt.imshow(fused_prediction_without_overlap[:,:,0], interpolation='bilinear', vmin=0, vmax=1)
 plt.subplot(232)
 plt.title(f'(II) shape={prediction.shape}')
-plt.imshow(prediction, interpolation='bilinear', vmin=0, vmax=1)
+plt.imshow(prediction[:,:,0], interpolation='bilinear', vmin=0, vmax=1)
 plt.subplot(233)
 plt.title(f'(III) shape={prediction_with_reflection.shape}')
-plt.imshow(prediction_with_reflection, interpolation='bilinear', vmin=0, vmax=1)
+plt.imshow(prediction_with_reflection[:,:,0], interpolation='bilinear', vmin=0, vmax=1)
 plt.subplot(235)
 plt.title('abs(II-I)')
-plt.imshow(abs(fused_prediction_without_overlap-prediction), interpolation='bilinear', vmin=0, vmax=1)
+plt.imshow(abs(fused_prediction_without_overlap-prediction)[:,:,0], interpolation='bilinear', vmin=0, vmax=1)
 plt.subplot(236)
 plt.title('abs(III-II)')
-plt.imshow(abs(prediction-prediction_with_reflection), interpolation='bilinear', vmin=0, vmax=1)
+plt.imshow(abs(prediction-prediction_with_reflection)[:,:,0], interpolation='bilinear', vmin=0, vmax=1)
 plt.show()
 ```
 
@@ -278,7 +283,7 @@ plt.show()
     
 
 
-![png](README_files/README_21_2.png)
+![png](https://raw.githubusercontent.com/Rignak/MightyMosaic/master/README_files/README_21_2.png)
 
 
 That's it.

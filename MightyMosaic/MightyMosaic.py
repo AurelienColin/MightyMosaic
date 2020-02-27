@@ -116,7 +116,7 @@ class MightyMosaic(np.ndarray):
         new_shape = [self.original_shape[0], self.original_shape[1]]
         if len(patchs[0][2].shape) == 3:
             new_shape.append(patchs[0][2].shape[-1])
-        new_mosaic = MightyMosaic(new_shape, patchs[0][2].shape,
+        new_mosaic = MightyMosaic(new_shape, patchs[0][2].shape[:2],
                                   overlap_factor=self.overlap_factor, fill_mode=self.fill_mode, cval=self.cval)
         for i, j, patch in patchs:
             new_mosaic[i, j] = patch
