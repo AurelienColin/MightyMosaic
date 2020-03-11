@@ -97,6 +97,9 @@ class MightyMosaic(np.ndarray):
             f'cval {progress_bar} should be of type "bool" but is is of type "{type(progress_bar)}"'
         assert callable(function), f'function should be callable but is of type {type(function)}'
         assert isinstance(batch_size, int), f'batch_size should be of type "int" but is of type "{type(batch_size)}"'
+        assert self.shape[0] * self.shape[1] / batch_size == self.shape[0] * self.shape[1] // batch_size, \
+            f'You have {self.shape[0] * self.shape[1]} tiles but a batch_size of {batch_size}.' \
+                f'Please select a batch_size that divide the number of tiles'
 
         index = [(i, j) for i in range(self.shape[0]) for j in range(self.shape[1])]
         batch_indexes = range(math.ceil(len(index) / batch_size))
@@ -113,7 +116,9 @@ class MightyMosaic(np.ndarray):
             for element_index, (i, j) in enumerate(index[min_index:max_index]):
                 patchs.append((i, j, batch[element_index]))
 
-        new_shape = [self.original_shape[0], self.original_shape[1]]
+        new_shape = [self.original_shape[0] // (self.shape[2] // patchs[0][2].shape[0]),
+                     self.original_shape[1] // (self.shape[3] // patchs[0][2].shape[1])]
+                     
         if len(patchs[0][2].shape) == 3:
             new_shape.append(patchs[0][2].shape[-1])
         new_mosaic = MightyMosaic(new_shape, patchs[0][2].shape[:2],

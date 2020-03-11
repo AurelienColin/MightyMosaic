@@ -288,7 +288,15 @@ plt.show()
 
 That's it.
 
+P.S. It's completely possible to use a categorizer for the prediction. Of course, since the original goal of the mosaic is to use segmentation, we assert that the output of the network should be of size *(?, h, w, c)* with:
+- *?* the number of batch ;
+- *h* the height of the output ;
+- *w* the width of the output ;
+- *c* the number of canals.
+
+A categorizer would have a output shape of *(?, n)* with *n* the number of classes, but you can tweak the lambda to get the correct dimensions.
 
 ```python
-
+mosaic = from_array(im, (tile_size,tile_size), overlap_factor=n)
+prediction = mosaic.apply(lambda x: np.tile(model.predict(x), n*n).reshape(1, n, n, 10))
 ```
