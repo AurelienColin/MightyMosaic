@@ -297,6 +297,6 @@ P.S. It's completely possible to use a categorizer for the prediction. Of course
 A categorizer would have a output shape of *(?, n)* with *n* the number of classes, but you can tweak the lambda to get the correct dimensions.
 
 ```python
-mosaic = from_array(im, (tile_size,tile_size), overlap_factor=n)
-prediction = mosaic.apply(lambda x: np.tile(model.predict(x), n*n).reshape(1, n, n, 10))
+mosaic = from_array(im, (tile_size,tile_size), overlap_factor=f)
+prediction = mosaic.apply(lambda x: np.tile(model.predict(x), f*f).reshape(1, f, f, n))
 ```
