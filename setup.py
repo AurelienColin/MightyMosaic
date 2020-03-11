@@ -8,7 +8,7 @@ requirements = ["tqdm>=4.32.1"]
 setup(
     name="MightyMosaic",
     python_requires='>=3.6',
-    version="1.2.2",
+    version="1.2.3",
     author="Aurélien COLIN",
     author_email="aureliencolin@hotmail.com",
     description="Create mosaics with overlapping tiles",
